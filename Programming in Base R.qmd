@@ -1,0 +1,296 @@
+---
+title: "Homework 2 - Programming in Base R"
+format: html
+editor: visual
+---
+
+## Task 1: Basic Vector practice
+
+### Question 1
+
+Create two vectors. One vector corresponding to the pre measurements and one to the post measurements.
+
+```{r t1q1}
+pre_treatment <- c(130, 128, 116, 124, 133, 134, 118, 126, 114, 127, 141, 138, 128, 140, 137, 131, 120, 128, 139, 135)
+post_treatment <- c(114, 98, 113, 99, 107, 116, 113, 111, 119, 117, 101, 119, 130, 122, 106, 106, 124, 102, 117, 113)
+
+pre_treatment
+post_treatment
+```
+
+### Question 2
+
+Assign names to the vector elements using the `paste()` function.
+
+```{r t1q2}
+subject_names <- paste("Subject", 1:20, sep = "_")
+
+names(pre_treatment) <- subject_names
+names(post_treatment) <- subject_names
+
+names(pre_treatment)
+names(post_treatment)
+```
+
+### Question 3
+
+Calculate the change in blood pressure for each patient by subtracting post-treatment measurements from pre-treatment measurements.
+
+```{r t1q3}
+change <- pre_treatment - post_treatment
+
+change
+```
+
+### Question 4
+
+Calculate the average decrease in blood pressure across all patients.
+
+```{r t1q4}
+average_decrease <- mean(change)
+
+average_decrease
+```
+
+### Question 5
+
+Determine which patients experienced a decrease in blood pressure after treatment (a positive change).
+
+```{r t1q5}
+decrease_bp <- which(change > 0)
+
+decrease_bp
+```
+
+### Question 6
+
+Subset the vector of differences to only return those that have a positive change.
+
+```{r t1q6}
+positive_change <- change[change > 0]
+
+positive_change
+```
+
+### Question 7
+
+Calculate the average decrease in blood pressure for those where the blood pressure decreased (positive change).
+
+```{r t1q7}
+avg_decrease <- mean(positive_change)
+
+avg_decrease
+```
+
+## Task 2: Basic Data Frame practice
+
+### Question 1
+
+Create a data frame object with four columns corresponding to your data above: patient, pre_bp, post_bp, and diff_bp
+
+```{r t2q1}
+bp_df <- data.frame(
+  patient = subject_names,
+  pre_bp = pre_treatment,
+  post_bp = post_treatment,
+  diff_bp = change
+)
+
+head(bp_df)
+```
+
+### Question 2
+
+Return only rows where the diff_bp column is negative.
+
+```{r t2q2}
+neg_diff <- bp_df[bp_df$diff_bp < 0, ]
+
+neg_diff
+```
+
+### Question 3
+
+Add a new column to the data frame corresponding to TRUE if the post_bp is less than 120.
+
+```{r t2q3}
+bp_df$low_post_bp <- bp_df$post_bp < 120
+```
+
+### Question 4
+
+Print the data frame out nicely.
+
+```{r t2q4}
+knitr::kable(bp_df)
+```
+
+## Task 3: List practice
+
+### Question 1
+
+Create a new data frame with this data in it that is similar to the data frame from task 2 (including the new column).
+
+```{r t3q1}
+placebo_pre_treatment <- c(138, 135, 147, 117, 152, 134, 114, 121, 131, 130)
+placebo_post_treatment <- c(105, 136, 123, 130, 134, 143, 135, 139, 120, 124)
+placebo_subject_names <- paste("Placebo_Subject", 1:10, sep = "_")
+
+placebo_df <- data.frame(
+  patient = placebo_subject_names,
+  pre_bp = placebo_pre_treatment,
+  post_bp = placebo_post_treatment,
+  diff_bp = placebo_pre_treatment - placebo_post_treatment,
+  low_post_bp = placebo_post_treatment < 120
+)
+
+head(placebo_df)
+```
+
+### Question 2
+
+Now create and store a list with two elements:
+
+-   1st element named treatment and contains the first data frame you created.
+
+-   2nd element named placebo and contains the second data frame you created.
+
+```{r t3q2}
+experiments <- list(
+  treatment = bp_df,
+  placebo = placebo_df
+)
+
+print(experiments)
+```
+
+### Question 3
+
+Access the first list element using three different types of syntax.
+
+```{r t3q3}
+experiments[[1]]
+experiments$treatment
+experiments[["treatment"]]
+```
+
+### Question 4
+
+In one line, access the placebo data frame, pre_bp column.
+
+```{r t3q4}
+experiments$placebo$pre_bp
+```
+
+## Task 4: Control Flow Practice
+
+### Question 1
+
+Suppose we want to characterize the post-treatment (or placebo) blood pressure measurement as optimal (≤ 120), borderline (120 \< bp ≤ 130), and high (\> 130). Create a new column in each data frame from above called status.
+
+```{r t4q1}
+experiments$status <- character(20) 
+```
+
+### Question 2
+
+For the non-placebo data frame (within the list), create a for loop and use if/then/else logic to create the status column’s values.
+
+```{r t4q2}
+for (i in 1:nrow(experiments$treatment)) {
+  if (experiments$treatment$post_bp[i] <= 120) {
+    experiments$treatment$status[i] <- "optimal"
+  } else if (experiments$treatment$post_bp[i] > 120 & experiments$treatment$post_bp[i] <= 130) {
+    experiments$treatment$status[i] <- "borderline"
+  } else if (experiments$treatment$post_bp[i] > 130) {
+    experiments$treatment$status[i] <- "high"
+  }
+}
+
+experiments$treatment
+```
+
+### Question 3
+
+Repeat for the placebo data frame (within the list).
+
+```{r t4q3}
+for (i in 1:nrow(experiments$placebo)) {
+  if (experiments$placebo$post_bp[i] <= 120) {
+    experiments$placebo$status[i] <- "optimal"
+  } else if (experiments$placebo$post_bp[i] > 120 & experiments$placebo$post_bp[i] <= 130) {
+    experiments$placebo$status[i] <- "borderline"
+  } else if (experiments$placebo$post_bp[i] > 130) {
+    experiments$placebo$status[i] <- "high"
+  }
+}
+
+experiments$placebo
+```
+
+## Task 5: Function Writing
+
+### Question 1
+
+Write a function that:
+
+-   takes in a list with two data frames in it (a treatment and a placebo data frame) as an argument. Give no default value.
+
+-   takes in an R function (that would find a summary of a numeric column) with the default value being set to "mean" (notice this is a quoted string).
+
+-   Finds the statistic of interest (as defined by the user input) for the pre, post, and diff columns of both data frames.
+
+    -   Use my_fun \<- get(stat) within the function to get the function from the quoted string.
+
+-   These six values should then be returned as a named list with meaningful names - this is a somewhat challenging part!
+
+    -   I’m going to let you consider what to do but you might create a vector of names that is created dynamically based on the statistic passed, create a vector with the actual statistic values, and then assign names() to your vector. Then return that (an atomic vector with names can be returned instead of a list).
+
+```{r t5q1}
+df_stats <- function(data_frame, stat ="mean"){
+  my_fun <- get(stat)
+  
+  treat_pre_stat <- my_fun(data_frame$treatment$pre_bp)
+  treat_post_stat <- my_fun(data_frame$treatment$post_bp)
+  treat_diff_stat <- my_fun(data_frame$treatment$diff_bp)
+  
+  placebo_pre_stat <- my_fun(data_frame$placebo$pre_bp)
+  placebo_post_stat <- my_fun(data_frame$placebo$post_bp)
+  placebo_diff_stat <- my_fun(data_frame$placebo$diff_bp)
+  
+  names <- c(paste("treatment pre_bp", stat), 
+             paste("treatment post_bp", stat), 
+             paste("treatment diff_bp", stat),
+             paste("placebo pre_bp", stat), 
+             paste("placebo post_bp", stat), 
+             paste("placebo diff_bp", stat))
+  
+  summary <- c(treat_pre_stat, treat_post_stat, treat_diff_stat,
+                      placebo_pre_stat, placebo_post_stat, placebo_diff_stat)
+  names(summary) <- names
+  
+  return(summary)
+  }
+```
+
+Finally, apply your function to you list of data frames from previous. Use it without specifying your statistic, with specifying your statistic as "var", "sd", "min", and "max".
+
+```{r t5q1v1}
+df_stats(experiments)
+```
+
+```{r t5q1v2}
+df_stats(experiments, stat ="var")
+```
+
+```{r t5q1v3}
+df_stats(experiments, stat ="sd")
+```
+
+```{r t5q1v4}
+df_stats(experiments, stat ="min")
+```
+
+```{r t5q1v5}
+df_stats(experiments, stat ="max")
+```
